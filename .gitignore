@@ -1,0 +1,5 @@
+*.Rproj.user
+*.Rhistory
+*WHO_covid.RData
+*04_Spatreg-Italy.R
+02_Data/Italian_population

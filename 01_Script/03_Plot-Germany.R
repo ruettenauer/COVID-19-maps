@@ -421,16 +421,12 @@ t5 <- sum(tmp.df[vars[5]], na.rm = TRUE)
 t6 <- sum(tmp.df[vars[6]], na.rm = TRUE)
 
 
-############################################
-### Plot cases and negative cases by day ###
-############################################
-
 
 
 ### Plot
 
 png(file = paste0("../03_Output/", "Germany_age_", date, ".png"), width = 18, height = 14, 
-    units = "in", bg = "white", family = "CM Roman", res = 600)
+    units = "in", bg = "white", family = "CM Roman", res = 400)
 par(mar=c(2, 0, 3, 6))
 par(mfrow=c(2, 3), oma = c(2, 0, 3, 0))
 
@@ -580,7 +576,7 @@ par(xpd = FALSE)
 
 
 ### Outer label
-mtext(paste0("COVID-19 by age groups: ", date), outer = TRUE, cex = 1.5, line = 1)
+mtext(paste0("COVID-19 by age group: ", date), outer = TRUE, cex = 1.5, line = 1)
 
 mtext("Data source: RKI, https://npgeo-corona-npgeo-de.hub.arcgis.com/", outer = TRUE, 
       cex = 1.2, side = 1, adj = 1, line = -2)

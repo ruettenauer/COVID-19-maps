@@ -22,11 +22,7 @@ loadfonts()
 ### Working Directory
 setwd("C:/work/Forschung/Covid-19/02_Data")
 
-### WHO Data directory (https://github.com/CSSEGISandData/COVID-19)
-whod <- "C:/work/Forschung/Daten/COVID-19/csse_covid_19_data/csse_covid_19_time_series/"
 
-### Italy data directory (https://github.com/pcm-dpc/COVID-19)
-itad <- "C:/work/Forschung/Daten/COVID-19-ita/dati-province/"
 
 
 #################

@@ -97,7 +97,7 @@ italy.df <- italy.df[order(italy.df$codice_provincia, italy.df$date),]
 
 
 ### Total number of cases on 2020-20-14
-sum(italy.df$totale_casi[italy.df$date == "2020-03-14"])
+sum(italy.df$totale_casi[italy.df$date == max(italy.df$date)])
 
 
 ### New cases per day per province
@@ -105,7 +105,7 @@ italy.df$new_cases <- ave(italy.df$totale_casi,
                           by = italy.df$codice_provincia,
                           FUN = function(x) x - dplyr::lag(x))
 
-sum(italy.df$new_cases[italy.df$date == "2020-03-14"])
+sum(italy.df$new_cases[italy.df$date == max(italy.df$date)])
 
 # Why negative "new cases"? Wrong test or moving between provinces?
 
@@ -177,7 +177,8 @@ italy.df$COD_PROV <- as.character(italy.df$COD_PROV)
 ### Germany daily RKI cases
 germany_long.df <- read.table(paste0(ded, "RKI_COVID19_enc.csv"), # enc: with encoding
                               header = TRUE, sep = ",", na.strings = "",
-                              quote = "", skipNul = TRUE)
+                              quote = "", skipNul = TRUE,
+                              colClasses = c(IdLandkreis = "character"))
 names(germany_long.df)[1] <- "id_bl"
 names(germany_long.df)[which(names(germany_long.df) == "IdLandkreis")] <- "AGS"
 

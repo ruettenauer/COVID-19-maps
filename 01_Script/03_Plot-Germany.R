@@ -22,11 +22,7 @@ loadfonts()
 ### Working Directory
 setwd("C:/work/Forschung/Covid-19/02_Data")
 
-### WHO Data directory (https://github.com/CSSEGISandData/COVID-19)
-whod <- "C:/work/Forschung/Daten/COVID-19/csse_covid_19_data/csse_covid_19_time_series/"
 
-### Italy data directory (https://github.com/pcm-dpc/COVID-19)
-itad <- "C:/work/Forschung/Daten/COVID-19-ita/dati-province/"
 
 
 #################
@@ -87,6 +83,7 @@ germany_covid.df <- merge(germany_covid.df, germany_lk.df[, vars],
                          by = "AGS", all.x = TRUE)
 
 ### Merge daily reports
+germany_covid.df$AGS <- as.character(germany_covid.df$AGS)
 drop <- c("id_bl", "Bundesland")
 germany_covid.df <- merge(germany_covid.df, germany_long.df[, -c(which(names(germany_long.df) %in% drop))], 
                          by = c("AGS", "date"), all.x = TRUE, all.y = TRUE)
@@ -125,7 +122,8 @@ germany_covid.df[, cumvars] <- apply(germany_covid.df[, cumvars], 2,
 
 
 ### Fill zeros for report variables
-repvars <- which(!names(germany_covid.df) %in% c(names(germany_lk.df), "date", "Landkreis", "Meldedatum"))
+repvars <- which(!names(germany_covid.df) %in% c(names(germany_lk.df), 
+                                                 "date", "Landkreis", "Meldedatum",  "Datenstand"))
 germany_covid.df[, repvars][is.na(germany_covid.df[, repvars])] <- 0
 
 

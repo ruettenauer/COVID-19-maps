@@ -500,12 +500,20 @@ names(diffvars) <- c("Difference 0-4 years old", "Difference 5-14 years old",
 
 
 
+### Summary by BL
+
+for(i in diffvars){
+  cat(paste("\n\n\n\n", i, "\n\n"))
+  print(by(germany_covid_recent.df[, i], germany_covid_recent.df$BL, 
+           FUN = function(x) summary(x)))
+}
 
 
 
-### Plot share ###
 
-
+############################################
+### Plot age groups group 60- 79 and 80+ ###
+############################################
 
 
 # Variables and combined vector
@@ -521,7 +529,7 @@ cols2 <- inferno(16, begin = 0.1, end = 1, direction = -1)
 cols2 <- c("#D3D3D3", cols2)
 
 
-cols3 <- c(viridis(11, begin = 0.3, end = 1, direction = 1),
+cols3 <- c(viridis(11, begin = 0.3, end = 0.9, direction = 1),
            brewer.pal(5, "OrRd"))
 
 
@@ -594,7 +602,7 @@ shades <- list(vacant.shades1, vacant.shades2, vacant.shades3,
 ### Plot
 date <- unique(tmp.spdf$date)
 
-png(file = paste0("../03_Output/", "Germany_age_differences_", date, ".png"), width = 14, height = 10, 
+png(file = paste0("../03_Output/", "Germany_age60_differences_", date, ".png"), width = 14, height = 10, 
     units = "in", bg = "white", family = "CM Roman", res = 400)
 par(mar = c(2, 0, 3, 6))
 par(mfrow = c(2, 3), oma = c(2, 0, 3, 0))
@@ -638,6 +646,287 @@ mtext("Code and processed data: https://github.com/ruettenauer/COVID-19-maps/", 
 
 dev.off()
 
+
+
+
+
+
+
+#####################################
+### Plot age groups group 15 - 49 ###
+#####################################
+
+
+# Variables and combined vector
+allvalues1 <- unlist(germany_covid_recent.df[, c(agevars[3:4])]) * 100
+allvalues2 <- unlist(germany_covid_recent.df[, c(propcovvars[3:4])]) * 100
+allvalues3 <- unlist(germany_covid_recent.df[, diffvars[3:4]]) * 100
+
+
+# Colours
+cols1 <- viridis(16, begin = 0, end = 1, direction = -1)
+cols1 <- c(cols1)
+cols2 <- inferno(16, begin = 0.1, end = 1, direction = -1)
+cols2 <- c("#D3D3D3", cols2)
+
+
+cols3 <- c(viridis(6, begin = 0.3, end = 0.9, direction = 1),
+           brewer.pal(9, "OrRd"), "#361223")
+
+
+
+
+# Percent of positive and population
+vacant.shades1 <- auto.shading(allvalues1[which(allvalues1 > 0)], 
+                               cutter = quantileCuts,  
+                               n = 16, col = cols1, digits = 4)
+cuts <- mycut(allvalues1[which(allvalues1 > 0)], 
+              n = 15, t = 3, p = 0.92)
+vacant.shades1$breaks <- c(cuts)
+
+vacant.shades1
+
+
+# Percent of positive and population
+vacant.shades2 <- auto.shading(allvalues2[which(allvalues2 > 0)], 
+                               cutter = quantileCuts,  
+                               n = 16, col = cols2, digits = 4)
+cuts2 <- mycut(allvalues2[which(allvalues2 > 0)], 
+               n = 15, t = 2, p = 0.90)
+vacant.shades2$breaks <- c(0.0000001, cuts2)
+
+vacant.shades2
+
+
+
+# Difference
+vacant.shades3 <- auto.shading(allvalues3[which(!is.na(allvalues3))], 
+                               cutter = quantileCuts, 
+                               n = 16, col = cols3, digits = 4)
+cuts3 <- mycut(allvalues3, 
+               n = 15, t = 3, p = 0.92)
+cuts3_rev <- rev(-mycut(-allvalues3, 
+                        n = 15, t = 3, p = 0.92))
+cuts3_mid <- quantileCuts(allvalues3[which(!is.na(allvalues3))] , 
+                          params = c(seq(0.14, 0.86, length.out = 9)))
+vacant.shades3$breaks <- c(cuts3_rev[1:3], cuts3_mid, cuts3[13:15])
+
+vacant.shades3
+
+
+
+### Merge shape and data
+tmp.spdf <- merge(germany_agr.sp, germany_covid_recent.df, by = "AGS")
+
+### Overall percentage
+
+t1p <- weighted.mean(data.frame(tmp.spdf)[, agevars[3]] * 100, w = tmp.spdf$age_Insgesamt, na.rm = TRUE)
+t2p <- weighted.mean(data.frame(tmp.spdf)[, agevars[4]] * 100, w = tmp.spdf$age_Insgesamt, na.rm = TRUE)
+
+t1c <- weighted.mean(data.frame(tmp.spdf)[, propcovvars[3]] * 100, w = tmp.spdf$sum_cases, na.rm = TRUE)
+t2c <- weighted.mean(data.frame(tmp.spdf)[, propcovvars[4]] * 100, w = tmp.spdf$sum_cases, na.rm = TRUE)
+
+t1d <- t1c - t1p
+t2d <- t2c - t2p
+
+t <- round(c(t1p, t1c, t1d, t2p,  t2c, t2d), 2)
+
+leg <- c("Per 100 inhabitants", "Per 100 cases", "Percentage-points",
+         "Per 100 inhabitants", "Per 100 cases", "Percentage-points")
+under <- c("under", "", "under",
+           "under", "", "under")
+
+shades <- list(vacant.shades1, vacant.shades2, vacant.shades3,
+               vacant.shades1, vacant.shades2, vacant.shades3)
+
+
+### Plot
+date <- unique(tmp.spdf$date)
+
+png(file = paste0("../03_Output/", "Germany_age15_differences_", date, ".png"), width = 14, height = 10, 
+    units = "in", bg = "white", family = "CM Roman", res = 400)
+par(mar = c(2, 0, 3, 6))
+par(mfrow = c(2, 3), oma = c(2, 0, 3, 0))
+
+
+# Loop over age groups
+
+plotvars <- c(agevars[3], propcovvars[3], diffvars[3],
+              agevars[4], propcovvars[4], diffvars[4])
+for(i in 1:length(plotvars)){
+  choropleth(tmp.spdf, data.frame(tmp.spdf)[, plotvars[i]] * 100, shading = shades[[i]], border = NA,
+             main = paste0(names(plotvars)[i], ": ", t[i]), cex.main = 1.6)
+  
+  plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
+  plot(ger.sp, border = "orange1", lwd = 1, add = T)
+  
+  
+  # Coordinates of window
+  x1 <- par()$usr[1]
+  x2 <- par()$usr[2]
+  y1 <- par()$usr[3]
+  y2 <- par()$usr[4]
+  r <- x2 - x1
+  
+  # Legend
+  par(xpd = NA)
+  choro.legend((x2 - r*0.13), y2, cex = 1.2, shades[[i]], title = leg[i],
+               border = NA, fmt = "%.2f", x.intersp = 1.5, under = under[i])
+  par(xpd = FALSE)
+}
+
+
+
+### Outer label
+mtext(paste0("Relative COVID-19 cases among age groups 15-34 and 35-59: ", date), outer = TRUE, cex = 1.5, line = 1)
+
+mtext("Data source: RKI, https://npgeo-corona-npgeo-de.hub.arcgis.com/ & Zensus 2011, https://www.regionalstatistik.de/", outer = TRUE, 
+      cex = 1.2, side = 1, adj = 1, line = -2)
+mtext("Code and processed data: https://github.com/ruettenauer/COVID-19-maps/", outer = TRUE, 
+      cex = 1.2, side = 1, adj = 1, line = 0)
+
+dev.off()
+
+
+
+
+
+
+
+######################################
+### Plot age groups group below 15 ###
+######################################
+
+
+# Variables and combined vector
+allvalues1 <- unlist(germany_covid_recent.df[, c(agevars[1:2])]) * 100
+allvalues2 <- unlist(germany_covid_recent.df[, c(propcovvars[1:2])]) * 100
+allvalues3 <- unlist(germany_covid_recent.df[, diffvars[1:2]]) * 100
+
+
+# Colours
+cols1 <- viridis(16, begin = 0, end = 1, direction = -1)
+cols1 <- c(cols1)
+cols2 <- inferno(16, begin = 0.1, end = 1, direction = -1)
+cols2 <- c("#D3D3D3", cols2)
+
+
+cols3 <- c(viridis(14, begin = 0.3, end = 0.9, direction = 1),
+           brewer.pal(3, "OrRd")[-2])
+
+
+
+
+# Percent of positive and population
+vacant.shades1 <- auto.shading(allvalues1[which(allvalues1 > 0)], 
+                               cutter = quantileCuts,  
+                               n = 16, col = cols1, digits = 4)
+cuts <- mycut(allvalues1[which(allvalues1 > 0)], 
+              n = 15, t = 3, p = 0.92)
+vacant.shades1$breaks <- c(cuts)
+
+vacant.shades1
+
+
+# Percent of positive and population
+vacant.shades2 <- auto.shading(allvalues2[which(allvalues2 > 0)], 
+                               cutter = quantileCuts,  
+                               n = 16, col = cols2, digits = 4)
+cuts2 <- mycut(allvalues2[which(allvalues2 > 0)], 
+               n = 15, t = 2, p = 0.90)
+vacant.shades2$breaks <- c(0.0000001, cuts2)
+
+vacant.shades2
+
+
+
+# Difference
+vacant.shades3 <- auto.shading(allvalues3[which(!is.na(allvalues3))], 
+                               cutter = quantileCuts, 
+                               n = 16, col = cols3, digits = 4)
+cuts3 <- mycut(allvalues3, 
+               n = 15, t = 3, p = 0.92)
+cuts3_rev <- rev(-mycut(-allvalues3, 
+                        n = 15, t = 3, p = 0.92))
+cuts3_mid <- quantileCuts(allvalues3[which(!is.na(allvalues3))] , 
+                          params = c(seq(0.14, 0.86, length.out = 9)))
+vacant.shades3$breaks <- c(cuts3_rev[1:3], cuts3_mid, cuts3[13:15])
+
+vacant.shades3
+
+
+
+### Merge shape and data
+tmp.spdf <- merge(germany_agr.sp, germany_covid_recent.df, by = "AGS")
+
+### Overall percentage
+
+t1p <- weighted.mean(data.frame(tmp.spdf)[, agevars[1]] * 100, w = tmp.spdf$age_Insgesamt, na.rm = TRUE)
+t2p <- weighted.mean(data.frame(tmp.spdf)[, agevars[2]] * 100, w = tmp.spdf$age_Insgesamt, na.rm = TRUE)
+
+t1c <- weighted.mean(data.frame(tmp.spdf)[, propcovvars[1]] * 100, w = tmp.spdf$sum_cases, na.rm = TRUE)
+t2c <- weighted.mean(data.frame(tmp.spdf)[, propcovvars[2]] * 100, w = tmp.spdf$sum_cases, na.rm = TRUE)
+
+t1d <- t1c - t1p
+t2d <- t2c - t2p
+
+t <- round(c(t1p, t1c, t1d, t2p,  t2c, t2d), 2)
+
+leg <- c("Per 100 inhabitants", "Per 100 cases", "Percentage-points",
+         "Per 100 inhabitants", "Per 100 cases", "Percentage-points")
+under <- c("under", "", "under",
+           "under", "", "under")
+
+shades <- list(vacant.shades1, vacant.shades2, vacant.shades3,
+               vacant.shades1, vacant.shades2, vacant.shades3)
+
+
+### Plot
+date <- unique(tmp.spdf$date)
+
+png(file = paste0("../03_Output/", "Germany_age0_differences_", date, ".png"), width = 14, height = 10, 
+    units = "in", bg = "white", family = "CM Roman", res = 400)
+par(mar = c(2, 0, 3, 6))
+par(mfrow = c(2, 3), oma = c(2, 0, 3, 0))
+
+
+# Loop over age groups
+
+plotvars <- c(agevars[1], propcovvars[1], diffvars[1],
+              agevars[2], propcovvars[2], diffvars[2])
+for(i in 1:length(plotvars)){
+  choropleth(tmp.spdf, data.frame(tmp.spdf)[, plotvars[i]] * 100, shading = shades[[i]], border = NA,
+             main = paste0(names(plotvars)[i], ": ", t[i]), cex.main = 1.6)
+  
+  plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
+  plot(ger.sp, border = "orange1", lwd = 1, add = T)
+  
+  
+  # Coordinates of window
+  x1 <- par()$usr[1]
+  x2 <- par()$usr[2]
+  y1 <- par()$usr[3]
+  y2 <- par()$usr[4]
+  r <- x2 - x1
+  
+  # Legend
+  par(xpd = NA)
+  choro.legend((x2 - r*0.13), y2, cex = 1.2, shades[[i]], title = leg[i],
+               border = NA, fmt = "%.2f", x.intersp = 1.5, under = under[i])
+  par(xpd = FALSE)
+}
+
+
+
+### Outer label
+mtext(paste0("Relative COVID-19 cases among age groups 0-4 and 5-15: ", date), outer = TRUE, cex = 1.5, line = 1)
+
+mtext("Data source: RKI, https://npgeo-corona-npgeo-de.hub.arcgis.com/ & Zensus 2011, https://www.regionalstatistik.de/", outer = TRUE, 
+      cex = 1.2, side = 1, adj = 1, line = -2)
+mtext("Code and processed data: https://github.com/ruettenauer/COVID-19-maps/", outer = TRUE, 
+      cex = 1.2, side = 1, adj = 1, line = 0)
+
+dev.off()
 
 
 

@@ -1,7 +1,7 @@
 
-#### Read Covid Data from John Hopkins ####
+#### Plot RKI Covid Germany ####
 #### Tobias Ruettenauer ####
-#### 2020/ 01 / 31 ####
+#### 2020/ 03 / 21 ####
 
 rm(list=ls())
 
@@ -158,54 +158,49 @@ de.lw <- nb2listw(de.nb, style = "W")
 ### Define cuts and colors ###
 ##############################
 
+### Colours
 cols1 <- viridis(15, direction = -1)
 cols1 <- c("#FAF0E6", cols1)
 
-cols2 <- inferno(15, begin = 0.1, end = 1, direction = -1)
+cols2 <- inferno(12, begin = 0.1, end = 1, direction = -1)
 cols2 <- c("#FAF0E6", cols2 )
 
-# Cutoff for two quantile distributions
-midpoint <- quantile(germany_covid.df$sum_cases[which(germany_covid.df$sum_cases > 0)], 
-                     na.rm = TRUE, probs = c(0.9, 0.95, 0.99))
-
-midpoint2 <- quantile(germany_covid.df$daily_cases[which(germany_covid.df$sum_cases > 0)], 
-                     na.rm = TRUE, probs = c(0.9, 0.95, 0.99))
 
 
-# Total cases
-vacant.shades1 <- auto.shading(germany_covid.df$sum_cases[which(germany_covid.df$sum_cases > 0)], n = 16, cutter = quantileCuts, 
-                               col = cols1, digits = 4)
-
-cuts1 <- quantileCuts(germany_covid.df$sum_cases[which(germany_covid.df$sum_cases > 0 &
-                                                         germany_covid.df$sum_cases <= midpoint[2])], 9)
-
-cuts2 <- quantileCuts(germany_covid.df$sum_cases[which(germany_covid.df$sum_cases > midpoint[1])], 4)
-
-
-vacant.shades1$breaks <- c(0.0000000000001, cuts1, midpoint[1], cuts2, max(germany_covid.df$sum_cases)/3)
-
-# cuts <- scales::trans_breaks("log2", function(x) 2 ^ x, 16)(germany_covid.df$sum_cases)
-# 
-# cutsvacant.shades1$breaks <- c(0.0000000000001, cuts)
-
-
-
-
-# New cases
-vacant.shades2 <- auto.shading(germany_covid.df$daily_cases[which(germany_covid.df$daily_cases > 0)], n = 15, 
-                               cutter = quantileCuts, 
-                               col = cols2, digits = 4)
-
-if(length(vacant.shades2$breaks) < 15){
-  vacant.shades2$breaks <- c(vacant.shades2$breaks, max(germany_covid.df$daily_cases)/2)
+### Cutoff points
+mycut <- function(x, n = 15, t = 5, p = 0.9, start = NULL){
+  p1 <- seq(p, 0.99, length.out = t)
+  suppressWarnings(c1 <- quantileCuts(x, params = p1))
   
-  cols2 <- inferno((length(vacant.shades2$breaks) + 2), begin = 0.1, end = 1, direction = -1)
-  cols2 <- c("#FAF0E6", cols2 )
-  vacant.shades2$cols <- cols2
+  if(is.null(start)){
+    p_st <- (1:((n - t) - 1))/(n - t)
+    start <- p_st[1]
+  }
+  
+  p2 <- seq(start, p - (p1[2] - p1[1]) * 1.5, length.out = (n - t))
+  suppressWarnings(c2 <- quantileCuts(x, params = p2))
+  
+  
+  return(c(c2, c1))
 }
 
 
-vacant.shades2$breaks <- c(0.0000000000001, vacant.shades2$breaks)
+# Total cases
+vacant.shades1 <- auto.shading(germany_covid.df$sum_cases[which(germany_covid.df$sum_cases > 0)], 
+                               cutter = quantileCuts,  
+                               n = 15, col = cols1, digits = 4)
+cuts <- mycut(germany_covid.df$sum_cases[which(germany_covid.df$sum_cases > 0)], 
+              n = 15, t = 3, p = 0.92, start = 0.05)
+vacant.shades1$breaks <- c(0.0000000000001, cuts[-1])
+
+# New cases
+vacant.shades2 <- auto.shading(germany_covid.df$daily_cases[which(germany_covid.df$daily_cases > 0)], 
+                               cutter = quantileCuts,  
+                               n = 12, col = cols2, digits = 4)
+cuts2 <- mycut(germany_covid.df$daily_cases[which(germany_covid.df$daily_cases > 0)], 
+              n = 11, t = 3, p = 0.94, start = 0.15)
+vacant.shades2$breaks <- c(0.0000000000001, cuts2[-1], max(germany_covid.df$daily_cases)/2)
+
 
 
 
@@ -219,18 +214,18 @@ dates <- unique(germany_covid.df$date)
 dates <- dates[which(dates >= "2020-02-25" & dates < max(dates))]
 
 for(i in dates){
-  
+
   ### Merge shape and data
   tmp.df <- germany_covid.df[germany_covid.df$date == i, ]
-  
+
   tmp.spdf <- merge(germany.sp, tmp.df,
                     by = "AGS")
-  
+
   tc <- sum(tmp.df$sum_cases, na.rm = TRUE)
   nc <- sum(tmp.df$daily_cases, na.rm = TRUE)
-  
+
   j <- as.character(as.Date(i, origin = "1970-01-01"))
-  
+
   ### Autocorrelation
   # if(i != dates[1]){
   #   moran_all <- moran.test(tmp.spdf$sum_cases, de.lw)
@@ -239,85 +234,85 @@ for(i in dates){
   moran_all <- moran.test(tmp.spdf$sum_cases, de.lw)
   moran_new <- moran.test(tmp.spdf$daily_cases, de.lw)
 
-  
-  
+
+
   ### Plot
-  
-  png(file = paste0("../03_Output/", "Germany_cases_", j, ".png"), width = 12, height = 7, 
+
+  png(file = paste0("../03_Output/", "Germany_cases_", j, ".png"), width = 12, height = 7,
       units = "in", bg = "white", family = "CM Roman", res = 600)
   par(mar=c(2, 0, 3, 6))
   par(mfrow=c(1, 2), oma = c(2, 0, 1.5, 0))
-  
-  
+
+
   #### Total cases
-  
+
   choropleth(tmp.spdf, tmp.spdf$sum_cases, shading = vacant.shades1, border = NA,
              main = paste0("Total cases: ", tc), cex.main = 1.5)
-  
+
   plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
   plot(ger.sp, border = "orange1", lwd = 1, add = T)
-  
-  
+
+
   # Coordinates of window
   x1 <- par()$usr[1]
   x2 <- par()$usr[2]
   y1 <- par()$usr[3]
   y2 <- par()$usr[4]
   r <- x2 - x1
-  
+
   # Legend
   par(xpd = NA)
   choro.legend((x2 - r*0.10), y2, cex = 1, vacant.shades1, title = "Total cases ",
                border = NA, fmt = "%.0f", under = "")
   par(xpd = FALSE)
-  
+
   # if(i == dates[1]){
   #   mtext(paste0("Moran's I:     "), outer = FALSE, cex = 1.5, side = 1)
   # }else{
   #   mtext(paste0("Moran's I: ", round(moran_all$estimate[1], 2)), outer = FALSE, cex = 1.5, side = 1)
   # }
   mtext(paste0("Moran's I: ", round(moran_all$estimate[1], 2)), outer = FALSE, cex = 1.5, side = 1)
-  
+
   #### New cases
-  
+
   choropleth(tmp.spdf, tmp.spdf$daily_cases, shading = vacant.shades2, border = NA,
              main = paste0("New cases: ", nc), cex.main = 1.5)
-  
+
   plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
   plot(ger.sp, border = "orange1", lwd = 1, add = T)
-  
-  
+
+
   # Coordinates of window
   x1 <- par()$usr[1]
   x2 <- par()$usr[2]
   y1 <- par()$usr[3]
   y2 <- par()$usr[4]
   r <- x2 - x1
-  
+
   # Legend
   par(xpd = NA)
   choro.legend((x2 - r*0.10), y2, cex = 1, vacant.shades2, title = "New cases ",
                border = NA, fmt = "%.0f", under = "")
   par(xpd = FALSE)
-  
+
   # if(i == dates[1]){
   #   mtext(paste0("Moran's I:     "), outer = FALSE, cex = 1.5, side = 1)
   # }else{
   #   mtext(paste0("Moran's I: ", round(moran_new$estimate[1], 2)), outer = FALSE, cex = 1.5, side = 1)
   # }
   mtext(paste0("Moran's I: ", round(moran_new$estimate[1], 2)), outer = FALSE, cex = 1.5, side = 1)
-  
+
   ### Outer label
   mtext(paste0("COVID-19: ", j), outer = TRUE, cex = 1.5)
-  
-  mtext("Data source: RKI, https://npgeo-corona-npgeo-de.hub.arcgis.com/", outer = TRUE, 
+
+  mtext("Data source: RKI, https://npgeo-corona-npgeo-de.hub.arcgis.com/", outer = TRUE,
         cex = 0.8, side = 1, adj = 1, line = 0)
-  mtext("Code and processed data: https://github.com/ruettenauer/COVID-19-maps/", outer = TRUE, 
+  mtext("Code and processed data: https://github.com/ruettenauer/COVID-19-maps/", outer = TRUE,
         cex = 0.8, side = 1, adj = 1, line = 1)
-  
+
   dev.off()
-  
-  
+
+
 }
 
 
@@ -387,17 +382,16 @@ allvalues <- unlist(germany_covid.df[germany_covid.df$date == date, vars])
 cols2 <- inferno(11, begin = 0.1, end = 1, direction = -1)
 cols2 <- c("#FAF0E6", cols2 )
 
-# Cutoff for two quantile distributions
-midpoint <- quantile(allvalues[which(allvalues > 0)], 
-                     na.rm = TRUE, probs = c(0.9, 0.95, 0.99))
+
+# Total cases over all age groups
+vacant.shades1 <- auto.shading(allvalues[which(allvalues > 0)], 
+                               cutter = quantileCuts,  
+                               n = 10, col = cols2, digits = 4)
+cuts <- mycut(allvalues[which(allvalues > 0)], 
+              n = 10, t = 3, p = 0.92, start = 0.1)
+vacant.shades1$breaks <- c(0.0000000000001, cuts)
 
 
-
-# All cases identical cut-off
-vacant.shades1 <- auto.shading(allvalues[which(allvalues > 0)], n = 10, cutter = quantileCuts, 
-                               col = cols2, digits = 4)
-
-vacant.shades1$breaks <- c(0.0000000000001, cuts1, midpoint[2:3])
 
 
 ######################################
@@ -423,7 +417,7 @@ t6 <- sum(tmp.df[vars[6]], na.rm = TRUE)
 
 ### Plot
 
-png(file = paste0("../03_Output/", "Germany_age_", date, ".png"), width = 18, height = 14, 
+png(file = paste0("../03_Output/", "Germany_age_", date, ".png"), width = 14, height = 10, 
     units = "in", bg = "white", family = "CM Roman", res = 400)
 par(mar=c(2, 0, 3, 6))
 par(mfrow=c(2, 3), oma = c(2, 0, 3, 0))
@@ -432,7 +426,7 @@ par(mfrow=c(2, 3), oma = c(2, 0, 3, 0))
 #### Age gr 1
 
 choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[1]], shading = vacant.shades1, border = NA,
-           main = paste0("0-4 years old: ", t1), cex.main = 2)
+           main = paste0("0-4 years old: ", t1), cex.main = 1.5)
 
 plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
 plot(ger.sp, border = "orange1", lwd = 1, add = T)
@@ -447,7 +441,7 @@ r <- x2 - x1
 
 # Legend
 par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.5, vacant.shades1, title = "Total cases      ",
+choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
              border = NA, fmt = "%.0f", under = "")
 par(xpd = FALSE)
 
@@ -455,7 +449,7 @@ par(xpd = FALSE)
 #### Age gr 2
 
 choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[2]], shading = vacant.shades1, border = NA,
-           main = paste0("5-14 years old: ", t2), cex.main = 2)
+           main = paste0("5-14 years old: ", t2), cex.main = 1.5)
 
 plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
 plot(ger.sp, border = "orange1", lwd = 1, add = T)
@@ -470,7 +464,7 @@ r <- x2 - x1
 
 # Legend
 par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.5, vacant.shades1, title = "Total cases      ",
+choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
              border = NA, fmt = "%.0f", under = "")
 par(xpd = FALSE)
 
@@ -479,7 +473,7 @@ par(xpd = FALSE)
 #### Age gr 3
 
 choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[3]], shading = vacant.shades1, border = NA,
-           main = paste0("15-34 years old: ", t3), cex.main = 2)
+           main = paste0("15-34 years old: ", t3), cex.main = 1.5)
 
 plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
 plot(ger.sp, border = "orange1", lwd = 1, add = T)
@@ -494,7 +488,7 @@ r <- x2 - x1
 
 # Legend
 par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.5, vacant.shades1, title = "Total cases      ",
+choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
              border = NA, fmt = "%.0f", under = "")
 par(xpd = FALSE)
 
@@ -503,7 +497,7 @@ par(xpd = FALSE)
 #### Age gr 4
 
 choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[4]], shading = vacant.shades1, border = NA,
-           main = paste0("35-59 years old: ", t4), cex.main = 2)
+           main = paste0("35-59 years old: ", t4), cex.main = 1.5)
 
 plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
 plot(ger.sp, border = "orange1", lwd = 1, add = T)
@@ -518,7 +512,7 @@ r <- x2 - x1
 
 # Legend
 par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.5, vacant.shades1, title = "Total cases      ",
+choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
              border = NA, fmt = "%.0f", under = "")
 par(xpd = FALSE)
 
@@ -527,7 +521,7 @@ par(xpd = FALSE)
 #### Age gr 5
 
 choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[5]], shading = vacant.shades1, border = NA,
-           main = paste0("60-79 years old: ", t5), cex.main = 2)
+           main = paste0("60-79 years old: ", t5), cex.main = 1.5)
 
 plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
 plot(ger.sp, border = "orange1", lwd = 1, add = T)
@@ -542,7 +536,7 @@ r <- x2 - x1
 
 # Legend
 par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.5, vacant.shades1, title = "Total cases      ",
+choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
              border = NA, fmt = "%.0f", under = "")
 par(xpd = FALSE)
 
@@ -551,7 +545,7 @@ par(xpd = FALSE)
 #### Age gr 6
 
 choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[6]], shading = vacant.shades1, border = NA,
-           main = paste0("80 years and older: ", t6), cex.main = 2)
+           main = paste0("80 years and older: ", t6), cex.main = 1.5)
 
 plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
 plot(ger.sp, border = "orange1", lwd = 1, add = T)
@@ -566,7 +560,7 @@ r <- x2 - x1
 
 # Legend
 par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.5, vacant.shades1, title = "Total cases      ",
+choro.legend((x2 - r*0.13), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
              border = NA, fmt = "%.0f", under = "")
 par(xpd = FALSE)
 

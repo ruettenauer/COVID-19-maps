@@ -3,5 +3,7 @@
 *WHO_covid.RData
 *04_Spatreg-Italy.R
 *05_Reg-Germany.R
+*Italy_covid_population.RData
+*Germany_covid_inkar.RData
 02_Data/Italian_population
 02_Data/INKAR

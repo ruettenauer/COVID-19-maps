@@ -1,7 +1,7 @@
 
-#### Read Covid Data from John Hopkins ####
+#### Read Covid Data for Italy and Germany ####
 #### Tobias Ruettenauer ####
-#### 2020/ 01 / 31 ####
+#### 2020/ 03 / 16 ####
 
 rm(list=ls())
 

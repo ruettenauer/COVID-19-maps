@@ -211,7 +211,9 @@ germany_long.df <- merge(germany_long.df, sex_w.df, by = c("AGS", "date"),
 
 
 ### Drop report specific info and make unique
-germany_long.df[, c("Geschlecht", "Altersgruppe", "age_gr", "ObjectId", "AnzahlFall", "AnzahlTodesfall")] <- NULL
+germany_long.df[, which(names(germany_long.df) %in% c("Geschlecht", "Altersgruppe", "age_gr", 
+                                                      "ObjectId", "AnzahlFall", "AnzahlTodesfall",
+                                                      "NeuerFall", "NeuerTodesfall"))] <- NULL
 
 germany_long.df <- unique(germany_long.df)
 

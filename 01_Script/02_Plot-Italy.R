@@ -36,6 +36,7 @@ load("Italy_covid.RData")
 ######################
 ### Load shapefile ###
 ######################
+# Shapefile from https://www.istat.it/it/archivio/222527
 
 provinces.sp <- readOGR(dsn = "./Limiti01012019_g/ProvCM01012019_g",
                         layer = "ProvCM01012019_g_WGS84") 

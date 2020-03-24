@@ -95,7 +95,7 @@ ger.sp <- gBuffer(ger.sp[1, ], byid = FALSE, width = 500)
 #################################
 ### Read census 2011 age data ###
 #################################
-# https://www.regionalstatistik.de/genesis/online/data;sid=A0C231ABCE1F9B475078B6ACB40BD619.reg3?operation=ergebnistabelleInfo&levelindex=1&levelid=1584920357455
+# https://www.regionalstatistik.de/genesis/online/data;sid=FE602C43F3C36B8FA84AAA849E84D6E7.reg2?operation=abruftabelleAbrufen&selectionname=12111-04-01-4&levelindex=0&levelid=1585048532267&index=14
 
 
 

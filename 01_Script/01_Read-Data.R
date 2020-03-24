@@ -22,58 +22,14 @@ loadfonts()
 ### Working Directory
 setwd("C:/work/Forschung/Covid-19/02_Data")
 
-# ### WHO Data directory (https://github.com/CSSEGISandData/COVID-19)
-# whod <- "C:/work/Forschung/Daten/COVID-19/csse_covid_19_data/csse_covid_19_time_series/"
 
 ### Italy data directory (https://github.com/pcm-dpc/COVID-19)
-itad <- "C:/work/Forschung/Daten/COVID-19-ita/dati-province/"
+itad <- "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-province/dpc-covid19-ita-province.csv"
 
 
 ### Germany data directory (https://survstat.rki.de/) # Old data source
 ### Germany data directory (https://npgeo-corona-npgeo-de.hub.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0) # New data source
-ded <- "C:/work/Forschung/Daten/COVID-19-DE/"
-
-
-# #####################
-# ### Load WHO data ###
-# #####################
-# 
-# ### WHO global data
-# 
-# confirmed.df <- read.table( paste0(whod, "time_series_19-covid-Confirmed.csv"),
-#                             header = TRUE, sep = ",", na.strings = "",
-#                             quote = "\"")
-# deaths.df <- read.table( paste0(whod, "time_series_19-covid-Deaths.csv"),
-#                             header = TRUE, sep = ",", na.strings = "",
-#                             quote = "\"")
-# recovered.df <- read.table( paste0(whod, "time_series_19-covid-Recovered.csv"),
-#                             header = TRUE, sep = ",", na.strings = "",
-#                             quote = "\"")
-# 
-# 
-# 
-# 
-# ### German county data
-# # header <- apply(read.table( paste0(ded, "survstat_covid_county_week/Data.csv"),
-# #                       header = FALSE, sep = "\t", na.strings = "",
-# #                       quote = "\"", skip = 1, nrows = 1, skipNul = TRUE)[1, -1], 2, as.character)
-# # germany.df <- read.table( paste0(ded, "survstat_covid_county_week/Data.csv"),
-# #                         header = FALSE, sep = "\t", na.strings = "",
-# #                         quote = "\"", skip = 3, skipNul = TRUE)
-# # names(germany.df) <- c("Kreis", gsub("-", "_", header)) 
-# # 
-# # 
-# # 
-# # 
-# # # Add omitted counties
-# # germany0.df <- read.table( paste0(ded, "survstat_covid_county/Data.csv"),
-# #                            header = FALSE, sep = "\t", na.strings = "",
-# #                            quote = "\"", skip = 3, skipNul = TRUE)
-# # names(germany0.df) <- c("Kreis", "Anzahl") 
-# # 
-# # # Combine
-# # germany.df <- merge(germany0.df, germany.df, by = "Kreis", all.x = TRUE)
-# # germany.df[is.na(germany.df)] <- 0
+ded <- "https://opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.csv"
 
 
 
@@ -83,7 +39,7 @@ ded <- "C:/work/Forschung/Daten/COVID-19-DE/"
 ###############################
 
 ### Italian province data
-italy.df <- read.table( paste0(itad, "dpc-covid19-ita-province.csv"),
+italy.df <- read.table(itad,
                         header = TRUE, sep = ",", na.strings = "",
                         quote = "\"")
 # Format date
@@ -175,7 +131,7 @@ italy.df$COD_PROV <- as.character(italy.df$COD_PROV)
 #################################
 
 ### Germany daily RKI cases
-germany_long.df <- read.table(paste0(ded, "RKI_COVID19_enc.csv"), # enc: with encoding
+germany_long.df <- read.table(ded, # enc: with encoding
                               header = TRUE, sep = ",", na.strings = "",
                               quote = "", skipNul = TRUE,
                               colClasses = c(IdLandkreis = "character"))

@@ -6,6 +6,7 @@
 rm(list=ls())
 
 ### Load packages
+library(jsonlite)
 library(rgdal)
 library(spdep)
 library(rgeos)
@@ -30,7 +31,10 @@ itad <- "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-province
 ### Germany data directory (https://survstat.rki.de/) # Old data source
 ### Germany data directory (https://npgeo-corona-npgeo-de.hub.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0) # New data source
 ded <- "https://opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.csv"
+ded <- "https://www.arcgis.com/sharing/rest/content/items/f10774f1c63e40168479a1feb6c7ca74/data"
 
+# Json query
+dej <- "http://www.opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.geojson"
 
 
 
@@ -131,11 +135,14 @@ italy.df$COD_PROV <- as.character(italy.df$COD_PROV)
 #################################
 
 ### Germany daily RKI cases
-germany_long.df <- read.table(ded, # enc: with encoding
-                              header = TRUE, sep = ",", na.strings = "",
-                              quote = "", skipNul = TRUE,
-                              colClasses = c(IdLandkreis = "character"))
-names(germany_long.df)[1] <- "id_bl"
+# germany_long.df <- read.table(ded, # enc: with encoding
+#                               header = TRUE, sep = ",", na.strings = "",
+#                               quote = "\"", skipNul = TRUE, 
+#                               colClasses = c(IdLandkreis = "character"))
+# names(germany_long.df)[1] <- "id_bl"
+
+germany_long.df <- fromJSON(dej)$features$properties # use json API
+
 names(germany_long.df)[which(names(germany_long.df) == "IdLandkreis")] <- "AGS"
 
 

@@ -127,8 +127,8 @@ repvars <- which(!names(germany_covid.df) %in% c(names(germany_lk.df),
 germany_covid.df[, repvars][is.na(germany_covid.df[, repvars])] <- 0
 
 
-# Total cases 2020-03-20 (as of 2020-03-21)
-sum(germany_covid.df$sum_cases[germany_covid.df$date == "2020-03-20"], na.rm = TRUE)
+# Total cases on recent date
+sum(germany_covid.df$sum_cases[germany_covid.df$date == max(germany_covid.df$date)], na.rm = TRUE)
 
 
 ### Save
@@ -162,7 +162,7 @@ de.lw <- nb2listw(de.nb, style = "W")
 cols1 <- viridis(15, direction = -1)
 cols1 <- c("#FAF0E6", cols1)
 
-cols2 <- inferno(12, begin = 0.1, end = 1, direction = -1)
+cols2 <- inferno(15, begin = 0.1, end = 1, direction = -1)
 cols2 <- c("#FAF0E6", cols2 )
 
 
@@ -190,16 +190,16 @@ vacant.shades1 <- auto.shading(germany_covid.df$sum_cases[which(germany_covid.df
                                cutter = quantileCuts,  
                                n = 15, col = cols1, digits = 4)
 cuts <- mycut(germany_covid.df$sum_cases[which(germany_covid.df$sum_cases > 0)], 
-              n = 15, t = 3, p = 0.92, start = 0.05)
-vacant.shades1$breaks <- c(0.0000000000001, cuts[-1])
+              n = 14, t = 4, p = 0.92)
+vacant.shades1$breaks <- c(0.0000000000001, cuts)
 
 # New cases
 vacant.shades2 <- auto.shading(germany_covid.df$daily_cases[which(germany_covid.df$daily_cases > 0)], 
                                cutter = quantileCuts,  
                                n = 12, col = cols2, digits = 4)
 cuts2 <- mycut(germany_covid.df$daily_cases[which(germany_covid.df$daily_cases > 0)], 
-              n = 11, t = 3, p = 0.94, start = 0.15)
-vacant.shades2$breaks <- c(0.0000000000001, cuts2[-1], max(germany_covid.df$daily_cases)/2)
+              n = 14, t = 4, p = 0.92, start = 0.15)
+vacant.shades2$breaks <- c(0.0000000000001, cuts2)
 
 
 
@@ -321,21 +321,22 @@ for(i in dates){
 ### Animate as gif ###
 ######################
 
+# All pictures
+files <- paste0("../03_Output/", "Germany_cases_", dates[dates >= "2020-03-01"], ".png")
 
-# files <- list.files(path = "../03_Output/", pattern = "Germany_cases_*", full.names = T)
-files <- paste0("../03_Output/", "Germany_cases_", dates, ".png")
+# Repeat last picture
+files <- c(files, files[length(files)], files[length(files)], files[length(files)], files[length(files)]) 
 
-
+# Import files
 img <- lapply(files, FUN = function(x) image_read(x))
 
-# img2 <- lapply(img, FUN = function(x) image_resize(x, "840x490"))
-
+# Resize
 img2 <- lapply(img, FUN = function(x) image_resize(x, "1260x735"))
 
-
+# Animate
 img2 <- image_join(img2)
 
-gif <- image_animate(img2, fps = 1)
+gif <- image_animate(img2, fps = 2)
 
 image_write(gif, "../03_Output/Germany_covid19.gif")
 
@@ -345,237 +346,237 @@ image_write(gif, "../03_Output/Germany_covid19.gif")
 
 
 
-###-----------------------------------###
-### Plot age specific for recent day  ###
-###-----------------------------------###
-
-
-
-
-date <- max(germany_covid.df$date) - 1 
-
-summary(germany_covid.df$sum_cases_00_04[germany_covid.df$date == date])
-table(germany_covid.df$sum_cases_00_04[germany_covid.df$date == date])
-summary(germany_covid.df$sum_cases_05_14[germany_covid.df$date == date])
-table(germany_covid.df$sum_cases_05_14[germany_covid.df$date == date])
-summary(germany_covid.df$sum_cases_15_34[germany_covid.df$date == date])
-table(germany_covid.df$sum_cases_15_34[germany_covid.df$date == date])
-summary(germany_covid.df$sum_cases_35_59[germany_covid.df$date == date])
-table(germany_covid.df$sum_cases_35_59[germany_covid.df$date == date])
-summary(germany_covid.df$sum_cases_60_79[germany_covid.df$date == date])
-table(germany_covid.df$sum_cases_60_79[germany_covid.df$date == date])
-summary(germany_covid.df$sum_cases_80[germany_covid.df$date == date])
-table(germany_covid.df$sum_cases_80[germany_covid.df$date == date])
-
-
-
-##############################
-### Define cuts and colors ###
-##############################
-
-# Variables and combined vector
-vars <- c("sum_cases_00_04", "sum_cases_05_14", "sum_cases_15_34",
-          "sum_cases_35_59", "sum_cases_60_79", "sum_cases_80")
-allvalues <- unlist(germany_covid.df[germany_covid.df$date == date, vars])
-
-# Colours
-cols2 <- inferno(11, begin = 0.1, end = 1, direction = -1)
-cols2 <- c("#FAF0E6", cols2 )
-
-
-# Total cases over all age groups
-vacant.shades1 <- auto.shading(allvalues[which(allvalues > 0)], 
-                               cutter = quantileCuts,  
-                               n = 10, col = cols2, digits = 4)
-cuts <- mycut(allvalues[which(allvalues > 0)], 
-              n = 10, t = 3, p = 0.92, start = 0.1)
-vacant.shades1$breaks <- c(0.0000000000001, cuts)
-
-
-
-
-######################################
-### Plot recent cases by age group ###
-######################################
-
-
-### Merge shape and data
-tmp.df <- germany_covid.df[germany_covid.df$date == date, ]
-
-tmp.spdf <- merge(germany.sp, tmp.df,
-                  by = "AGS")
-
-t1 <- sum(tmp.df[vars[1]], na.rm = TRUE)
-t2 <- sum(tmp.df[vars[2]], na.rm = TRUE)
-t3 <- sum(tmp.df[vars[3]], na.rm = TRUE)
-t4 <- sum(tmp.df[vars[4]], na.rm = TRUE)
-t5 <- sum(tmp.df[vars[5]], na.rm = TRUE)
-t6 <- sum(tmp.df[vars[6]], na.rm = TRUE)
-
-
-
-
-### Plot
-
-png(file = paste0("../03_Output/", "Germany_age_", date, ".png"), width = 14, height = 10, 
-    units = "in", bg = "white", family = "CM Roman", res = 400)
-par(mar=c(2, 0, 3, 6))
-par(mfrow=c(2, 3), oma = c(2, 0, 3, 0))
-
-
-#### Age gr 1
-
-choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[1]], shading = vacant.shades1, border = NA,
-           main = paste0("0-4 years old: ", t1), cex.main = 1.5)
-
-plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
-plot(ger.sp, border = "orange1", lwd = 1, add = T)
-
-
-# Coordinates of window
-x1 <- par()$usr[1]
-x2 <- par()$usr[2]
-y1 <- par()$usr[3]
-y2 <- par()$usr[4]
-r <- x2 - x1
-
-# Legend
-par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
-             border = NA, fmt = "%.0f", under = "")
-par(xpd = FALSE)
-
-
-#### Age gr 2
-
-choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[2]], shading = vacant.shades1, border = NA,
-           main = paste0("5-14 years old: ", t2), cex.main = 1.5)
-
-plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
-plot(ger.sp, border = "orange1", lwd = 1, add = T)
-
-
-# Coordinates of window
-x1 <- par()$usr[1]
-x2 <- par()$usr[2]
-y1 <- par()$usr[3]
-y2 <- par()$usr[4]
-r <- x2 - x1
-
-# Legend
-par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
-             border = NA, fmt = "%.0f", under = "")
-par(xpd = FALSE)
-
-
-
-#### Age gr 3
-
-choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[3]], shading = vacant.shades1, border = NA,
-           main = paste0("15-34 years old: ", t3), cex.main = 1.5)
-
-plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
-plot(ger.sp, border = "orange1", lwd = 1, add = T)
-
-
-# Coordinates of window
-x1 <- par()$usr[1]
-x2 <- par()$usr[2]
-y1 <- par()$usr[3]
-y2 <- par()$usr[4]
-r <- x2 - x1
-
-# Legend
-par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
-             border = NA, fmt = "%.0f", under = "")
-par(xpd = FALSE)
-
-
-
-#### Age gr 4
-
-choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[4]], shading = vacant.shades1, border = NA,
-           main = paste0("35-59 years old: ", t4), cex.main = 1.5)
-
-plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
-plot(ger.sp, border = "orange1", lwd = 1, add = T)
-
-
-# Coordinates of window
-x1 <- par()$usr[1]
-x2 <- par()$usr[2]
-y1 <- par()$usr[3]
-y2 <- par()$usr[4]
-r <- x2 - x1
-
-# Legend
-par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
-             border = NA, fmt = "%.0f", under = "")
-par(xpd = FALSE)
-
-
-
-#### Age gr 5
-
-choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[5]], shading = vacant.shades1, border = NA,
-           main = paste0("60-79 years old: ", t5), cex.main = 1.5)
-
-plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
-plot(ger.sp, border = "orange1", lwd = 1, add = T)
-
-
-# Coordinates of window
-x1 <- par()$usr[1]
-x2 <- par()$usr[2]
-y1 <- par()$usr[3]
-y2 <- par()$usr[4]
-r <- x2 - x1
-
-# Legend
-par(xpd = NA)
-choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
-             border = NA, fmt = "%.0f", under = "")
-par(xpd = FALSE)
-
-
-
-#### Age gr 6
-
-choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[6]], shading = vacant.shades1, border = NA,
-           main = paste0("80 years and older: ", t6), cex.main = 1.5)
-
-plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
-plot(ger.sp, border = "orange1", lwd = 1, add = T)
-
-
-# Coordinates of window
-x1 <- par()$usr[1]
-x2 <- par()$usr[2]
-y1 <- par()$usr[3]
-y2 <- par()$usr[4]
-r <- x2 - x1
-
-# Legend
-par(xpd = NA)
-choro.legend((x2 - r*0.13), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
-             border = NA, fmt = "%.0f", under = "")
-par(xpd = FALSE)
-
-
-
-
-### Outer label
-mtext(paste0("COVID-19 by age group: ", date), outer = TRUE, cex = 1.5, line = 1)
-
-mtext("Data source: RKI, https://npgeo-corona-npgeo-de.hub.arcgis.com/", outer = TRUE, 
-      cex = 1.2, side = 1, adj = 1, line = -2)
-mtext("Code and processed data: https://github.com/ruettenauer/COVID-19-maps/", outer = TRUE, 
-      cex = 1.2, side = 1, adj = 1, line = 0)
-
-dev.off()
-
-
-
+# ###-----------------------------------###
+# ### Plot age specific for recent day  ###
+# ###-----------------------------------###
+# 
+# 
+# 
+# 
+# date <- max(germany_covid.df$date) - 1 
+# 
+# summary(germany_covid.df$sum_cases_00_04[germany_covid.df$date == date])
+# table(germany_covid.df$sum_cases_00_04[germany_covid.df$date == date])
+# summary(germany_covid.df$sum_cases_05_14[germany_covid.df$date == date])
+# table(germany_covid.df$sum_cases_05_14[germany_covid.df$date == date])
+# summary(germany_covid.df$sum_cases_15_34[germany_covid.df$date == date])
+# table(germany_covid.df$sum_cases_15_34[germany_covid.df$date == date])
+# summary(germany_covid.df$sum_cases_35_59[germany_covid.df$date == date])
+# table(germany_covid.df$sum_cases_35_59[germany_covid.df$date == date])
+# summary(germany_covid.df$sum_cases_60_79[germany_covid.df$date == date])
+# table(germany_covid.df$sum_cases_60_79[germany_covid.df$date == date])
+# summary(germany_covid.df$sum_cases_80[germany_covid.df$date == date])
+# table(germany_covid.df$sum_cases_80[germany_covid.df$date == date])
+# 
+# 
+# 
+# ##############################
+# ### Define cuts and colors ###
+# ##############################
+# 
+# # Variables and combined vector
+# vars <- c("sum_cases_00_04", "sum_cases_05_14", "sum_cases_15_34",
+#           "sum_cases_35_59", "sum_cases_60_79", "sum_cases_80")
+# allvalues <- unlist(germany_covid.df[germany_covid.df$date == date, vars])
+# 
+# # Colours
+# cols2 <- inferno(11, begin = 0.1, end = 1, direction = -1)
+# cols2 <- c("#FAF0E6", cols2 )
+# 
+# 
+# # Total cases over all age groups
+# vacant.shades1 <- auto.shading(allvalues[which(allvalues > 0)], 
+#                                cutter = quantileCuts,  
+#                                n = 10, col = cols2, digits = 4)
+# cuts <- mycut(allvalues[which(allvalues > 0)], 
+#               n = 10, t = 3, p = 0.92, start = 0.1)
+# vacant.shades1$breaks <- c(0.0000000000001, cuts)
+# 
+# 
+# 
+# 
+# ######################################
+# ### Plot recent cases by age group ###
+# ######################################
+# 
+# 
+# ### Merge shape and data
+# tmp.df <- germany_covid.df[germany_covid.df$date == date, ]
+# 
+# tmp.spdf <- merge(germany.sp, tmp.df,
+#                   by = "AGS")
+# 
+# t1 <- sum(tmp.df[vars[1]], na.rm = TRUE)
+# t2 <- sum(tmp.df[vars[2]], na.rm = TRUE)
+# t3 <- sum(tmp.df[vars[3]], na.rm = TRUE)
+# t4 <- sum(tmp.df[vars[4]], na.rm = TRUE)
+# t5 <- sum(tmp.df[vars[5]], na.rm = TRUE)
+# t6 <- sum(tmp.df[vars[6]], na.rm = TRUE)
+# 
+# 
+# 
+# 
+# ### Plot
+# 
+# png(file = paste0("../03_Output/", "Germany_age_", date, ".png"), width = 14, height = 10, 
+#     units = "in", bg = "white", family = "CM Roman", res = 400)
+# par(mar=c(2, 0, 3, 6))
+# par(mfrow=c(2, 3), oma = c(2, 0, 3, 0))
+# 
+# 
+# #### Age gr 1
+# 
+# choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[1]], shading = vacant.shades1, border = NA,
+#            main = paste0("0-4 years old: ", t1), cex.main = 1.5)
+# 
+# plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
+# plot(ger.sp, border = "orange1", lwd = 1, add = T)
+# 
+# 
+# # Coordinates of window
+# x1 <- par()$usr[1]
+# x2 <- par()$usr[2]
+# y1 <- par()$usr[3]
+# y2 <- par()$usr[4]
+# r <- x2 - x1
+# 
+# # Legend
+# par(xpd = NA)
+# choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
+#              border = NA, fmt = "%.0f", under = "")
+# par(xpd = FALSE)
+# 
+# 
+# #### Age gr 2
+# 
+# choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[2]], shading = vacant.shades1, border = NA,
+#            main = paste0("5-14 years old: ", t2), cex.main = 1.5)
+# 
+# plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
+# plot(ger.sp, border = "orange1", lwd = 1, add = T)
+# 
+# 
+# # Coordinates of window
+# x1 <- par()$usr[1]
+# x2 <- par()$usr[2]
+# y1 <- par()$usr[3]
+# y2 <- par()$usr[4]
+# r <- x2 - x1
+# 
+# # Legend
+# par(xpd = NA)
+# choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
+#              border = NA, fmt = "%.0f", under = "")
+# par(xpd = FALSE)
+# 
+# 
+# 
+# #### Age gr 3
+# 
+# choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[3]], shading = vacant.shades1, border = NA,
+#            main = paste0("15-34 years old: ", t3), cex.main = 1.5)
+# 
+# plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
+# plot(ger.sp, border = "orange1", lwd = 1, add = T)
+# 
+# 
+# # Coordinates of window
+# x1 <- par()$usr[1]
+# x2 <- par()$usr[2]
+# y1 <- par()$usr[3]
+# y2 <- par()$usr[4]
+# r <- x2 - x1
+# 
+# # Legend
+# par(xpd = NA)
+# choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
+#              border = NA, fmt = "%.0f", under = "")
+# par(xpd = FALSE)
+# 
+# 
+# 
+# #### Age gr 4
+# 
+# choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[4]], shading = vacant.shades1, border = NA,
+#            main = paste0("35-59 years old: ", t4), cex.main = 1.5)
+# 
+# plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
+# plot(ger.sp, border = "orange1", lwd = 1, add = T)
+# 
+# 
+# # Coordinates of window
+# x1 <- par()$usr[1]
+# x2 <- par()$usr[2]
+# y1 <- par()$usr[3]
+# y2 <- par()$usr[4]
+# r <- x2 - x1
+# 
+# # Legend
+# par(xpd = NA)
+# choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
+#              border = NA, fmt = "%.0f", under = "")
+# par(xpd = FALSE)
+# 
+# 
+# 
+# #### Age gr 5
+# 
+# choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[5]], shading = vacant.shades1, border = NA,
+#            main = paste0("60-79 years old: ", t5), cex.main = 1.5)
+# 
+# plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
+# plot(ger.sp, border = "orange1", lwd = 1, add = T)
+# 
+# 
+# # Coordinates of window
+# x1 <- par()$usr[1]
+# x2 <- par()$usr[2]
+# y1 <- par()$usr[3]
+# y2 <- par()$usr[4]
+# r <- x2 - x1
+# 
+# # Legend
+# par(xpd = NA)
+# choro.legend((x2 - r*0.10), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
+#              border = NA, fmt = "%.0f", under = "")
+# par(xpd = FALSE)
+# 
+# 
+# 
+# #### Age gr 6
+# 
+# choropleth(tmp.spdf, data.frame(tmp.spdf)[, vars[6]], shading = vacant.shades1, border = NA,
+#            main = paste0("80 years and older: ", t6), cex.main = 1.5)
+# 
+# plot(tmp.spdf, border = ggplot2::alpha("grey70", 0.5), lwd = 0.5, add = T)
+# plot(ger.sp, border = "orange1", lwd = 1, add = T)
+# 
+# 
+# # Coordinates of window
+# x1 <- par()$usr[1]
+# x2 <- par()$usr[2]
+# y1 <- par()$usr[3]
+# y2 <- par()$usr[4]
+# r <- x2 - x1
+# 
+# # Legend
+# par(xpd = NA)
+# choro.legend((x2 - r*0.13), y2, cex = 1.2, vacant.shades1, title = "Total cases      ",
+#              border = NA, fmt = "%.0f", under = "")
+# par(xpd = FALSE)
+# 
+# 
+# 
+# 
+# ### Outer label
+# mtext(paste0("COVID-19 by age group: ", date), outer = TRUE, cex = 1.5, line = 1)
+# 
+# mtext("Data source: RKI, https://npgeo-corona-npgeo-de.hub.arcgis.com/", outer = TRUE, 
+#       cex = 1.2, side = 1, adj = 1, line = -2)
+# mtext("Code and processed data: https://github.com/ruettenauer/COVID-19-maps/", outer = TRUE, 
+#       cex = 1.2, side = 1, adj = 1, line = 0)
+# 
+# dev.off()
+# 
+# 
+# 

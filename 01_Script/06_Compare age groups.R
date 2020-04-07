@@ -529,8 +529,8 @@ cols2 <- inferno(16, begin = 0.1, end = 1, direction = -1)
 cols2 <- c("#D3D3D3", cols2)
 
 
-cols3 <- c(viridis(11, begin = 0.3, end = 0.9, direction = 1),
-           brewer.pal(5, "OrRd"))
+cols3 <- c(viridis(9, begin = 0.3, end = 0.9, direction = 1),
+           brewer.pal(7, "OrRd"))
 
 
 
@@ -813,6 +813,7 @@ cols2 <- c("#D3D3D3", cols2)
 
 cols3 <- c(viridis(14, begin = 0.3, end = 0.9, direction = 1),
            brewer.pal(3, "OrRd")[-2])
+cols3 <- viridis(16, begin = 0.3, end = 0.9, direction = 1)
 
 
 

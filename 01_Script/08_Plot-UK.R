@@ -131,7 +131,7 @@ uk.lw <- nb2listw(uk.nb, style = "W")
 cols1 <- viridis(15, direction = -1)
 cols1 <- c("#FAF0E6", cols1)
 
-cols2 <- inferno(12, begin = 0.1, end = 1, direction = -1)
+cols2 <- inferno(14, begin = 0.1, end = 1, direction = -1)
 cols2 <- c("#B0C4DE", "#FAF0E6", cols2 )
 
 
@@ -159,7 +159,7 @@ vacant.shades1 <- auto.shading(uk.df$confirm[which(uk.df$confirm > 0)],
                                cutter = quantileCuts,  
                                n = 15, col = cols1, digits = 4)
 cuts <- mycut(uk.df$confirm[which(uk.df$confirm > 0)], 
-              n = 14, t = 4, p = 0.90)
+              n = 14, t = 4, p = 0.92)
 vacant.shades1$breaks <- c(0.0000000000001, cuts)
 
 # New cases
@@ -167,9 +167,8 @@ vacant.shades2 <- auto.shading(uk.df$daily_cases[which(uk.df$daily_cases > 0)],
                                cutter = quantileCuts,  
                                n = 12, col = cols2, digits = 4)
 cuts2 <- mycut(uk.df$daily_cases[which(uk.df$daily_cases > 0)], 
-              n = 10, t = 3, p = 0.94, start = 0.15)
-vacant.shades2$breaks <- c(0, 0.0000000000001, cuts2, 
-                           max(uk.df$daily_cases, na.rm = TRUE)/2)
+              n = 13, t = 3, p = 0.92)
+vacant.shades2$breaks <- c(0, 0.0000000000001, cuts2)
 
 
 
@@ -298,7 +297,7 @@ for(i in dates){
 files <- paste0("../03_Output/", "England_cases_", dates, ".png")
 
 # Repeat last picture
-files <- c(files, files[length(files)], files[length(files)]) 
+files <- c(files, files[length(files)], files[length(files)], files[length(files)], files[length(files)]) 
 
 # Import files
 img <- lapply(files, FUN = function(x) image_read(x))
@@ -309,7 +308,7 @@ img2 <- lapply(img, FUN = function(x) image_resize(x, "1260x735"))
 # Animate
 img2 <- image_join(img2)
 
-gif <- image_animate(img2, fps = 1)
+gif <- image_animate(img2, fps = 2)
 
 image_write(gif, "../03_Output/England_covid19.gif")
 

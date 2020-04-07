@@ -223,67 +223,67 @@ for(i in vars){
 italy_pop.df$male_per <- italy_pop.df$sex_males / italy_pop.df$total * 100
 
 
-#######################
-### listwise object ###
-#######################
-
-it.nb <- poly2nb(provinces.sp, row.names = provinces.sp$COD_PROV)
-it.lw <- nb2listw(it.nb, style = "W")
-
-
-### W multiplied over time
-W <- nb2mat(it.nb)
-WI <- W %x% diag(length(unique(italy_pop.df$date)))
-
-WI2 <- W %x% diag((length(unique(italy_pop.df$date)) - 1))
-
-
-it_long.lw <- mat2listw(WI, style = "W")
-it_long2.lw <- mat2listw(WI2, style = "W")
-
-
-############################################
-### Spatial Autoregressive models ###
-############################################
-
-### Drop all pending cases (not allocated to province)
-italy_red.df <- italy_pop.df[which(as.numeric(italy_pop.df$COD_PROV) < 900), ]
-
-
-### Empty SAR model
-
-sar0_pols.mod <- spml(totale_casi ~ 1, 
-                    data = italy_red.df, index = c("COD_PROV", "date"), listw = it.lw, 
-                    model = "pooling", effect = "individual",
-                    lag = TRUE, spatial.error = "none", tol.solve = 1e-10)
-summary(sar0_pols.mod)
-
-
-### Pooled SAR
-sar1_pols.mod <- lagsarlm(totale_casi ~ total + area + male_per
-                          + age_per_0_10 + age_per_10_20 + age_per_30_40 + age_per_40_50 + 
-                            + age_per_50_60 + age_per_60_70 + age_per_70_80 + age_per_80_101, 
-                      data = italy_red.df, listw = it_long.lw,
-                      Durbin = FALSE, tol.solve = 1e-24 )
-summary(sar1_pols.mod)
-
-impacts(sar1_pols.mod, listw = it_long.lw)
-
-sar2_pols.mod <- lagsarlm(new_cases ~ total + area + male_per
-                          + age_per_0_10 + age_per_10_20 + age_per_30_40 + age_per_40_50 + 
-                            + age_per_50_60 + age_per_60_70 + age_per_70_80 + age_per_80_101,
-                          data = italy_red.df[italy_red.df$date != "2020-02-24", ], listw = it_long2.lw,
-                          Durbin = FALSE, tol.solve = 1e-24 )
-summary(sar2_pols.mod)
-
-
-### Pooled SDM
-sdm1_pols.mod <- lagsarlm(totale_casi ~ total + area + male_per
-                          + age_per_0_10 + age_per_10_20 + age_per_30_40 + age_per_40_50 + 
-                            + age_per_50_60 + age_per_60_70 + age_per_70_80 + age_per_80_101, 
-                          data = italy_red.df, listw = it_long.lw,
-                          Durbin = TRUE, tol.solve = 1e-24 )
-summary(sdm1_pols.mod)
+# #######################
+# ### listwise object ###
+# #######################
+# 
+# it.nb <- poly2nb(provinces.sp, row.names = provinces.sp$COD_PROV)
+# it.lw <- nb2listw(it.nb, style = "W")
+# 
+# 
+# ### W multiplied over time
+# W <- nb2mat(it.nb)
+# WI <- W %x% diag(length(unique(italy_pop.df$date)))
+# 
+# WI2 <- W %x% diag((length(unique(italy_pop.df$date)) - 1))
+# 
+# 
+# it_long.lw <- mat2listw(WI, style = "W")
+# it_long2.lw <- mat2listw(WI2, style = "W")
+# 
+# 
+# ############################################
+# ### Spatial Autoregressive models ###
+# ############################################
+# 
+# ### Drop all pending cases (not allocated to province)
+# italy_red.df <- italy_pop.df[which(as.numeric(italy_pop.df$COD_PROV) < 900), ]
+# 
+# 
+# ### Empty SAR model
+# 
+# sar0_pols.mod <- spml(totale_casi ~ 1, 
+#                     data = italy_red.df, index = c("COD_PROV", "date"), listw = it.lw, 
+#                     model = "pooling", effect = "individual",
+#                     lag = TRUE, spatial.error = "none", tol.solve = 1e-10)
+# summary(sar0_pols.mod)
+# 
+# 
+# ### Pooled SAR
+# sar1_pols.mod <- lagsarlm(totale_casi ~ total + area + male_per
+#                           + age_per_0_10 + age_per_10_20 + age_per_30_40 + age_per_40_50 + 
+#                             + age_per_50_60 + age_per_60_70 + age_per_70_80 + age_per_80_101, 
+#                       data = italy_red.df, listw = it_long.lw,
+#                       Durbin = FALSE, tol.solve = 1e-24 )
+# summary(sar1_pols.mod)
+# 
+# impacts(sar1_pols.mod, listw = it_long.lw)
+# 
+# sar2_pols.mod <- lagsarlm(new_cases ~ total + area + male_per
+#                           + age_per_0_10 + age_per_10_20 + age_per_30_40 + age_per_40_50 + 
+#                             + age_per_50_60 + age_per_60_70 + age_per_70_80 + age_per_80_101,
+#                           data = italy_red.df[italy_red.df$date != "2020-02-24", ], listw = it_long2.lw,
+#                           Durbin = FALSE, tol.solve = 1e-24 )
+# summary(sar2_pols.mod)
+# 
+# 
+# ### Pooled SDM
+# sdm1_pols.mod <- lagsarlm(totale_casi ~ total + area + male_per
+#                           + age_per_0_10 + age_per_10_20 + age_per_30_40 + age_per_40_50 + 
+#                             + age_per_50_60 + age_per_60_70 + age_per_70_80 + age_per_80_101, 
+#                           data = italy_red.df, listw = it_long.lw,
+#                           Durbin = TRUE, tol.solve = 1e-24 )
+# summary(sdm1_pols.mod)
 
 
 

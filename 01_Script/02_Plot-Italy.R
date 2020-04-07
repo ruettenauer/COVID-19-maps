@@ -81,33 +81,68 @@ cols1 <- c("#FAF0E6", cols1)
 cols2 <- inferno(14, begin = 0.1, end = 1, direction = -1)
 cols2 <- c("#B0C4DE", "#FAF0E6", cols2 )
 
-# Total cases
-vacant.shades1 <- auto.shading(italy.df$totale_casi[!is.na(italy.df$totale_casi)], n = 16, cutter = quantileCuts, 
-                               col = cols1, digits = 4)
-
-med <- median(italy.df$totale_casi)
-cuts1 <- quantileCuts(italy.df$totale_casi[!is.na(italy.df$totale_casi)
-                                           & italy.df$totale_casi > 0
-                                           & italy.df$totale_casi <= 200], 8)
-
-cuts2 <- quantileCuts(italy.df$totale_casi[!is.na(italy.df$totale_casi)
-                                           & italy.df$totale_casi > 0
-                                           & italy.df$totale_casi > 200], 7)
-
-vacant.shades1$breaks <- c(0.0000000000001, cuts1, cuts2)
-
-# cuts <- scales::trans_breaks("log2", function(x) 2 ^ x, 16)(italy.df$totale_casi)
+# # Total cases
+# vacant.shades1 <- auto.shading(italy.df$totale_casi[!is.na(italy.df$totale_casi)], n = 16, cutter = quantileCuts, 
+#                                col = cols1, digits = 4)
 # 
-# cutsvacant.shades1$breaks <- c(0.0000000000001, cuts)
+# med <- median(italy.df$totale_casi)
+# cuts1 <- quantileCuts(italy.df$totale_casi[!is.na(italy.df$totale_casi)
+#                                            & italy.df$totale_casi > 0
+#                                            & italy.df$totale_casi <= 200], 8)
+# 
+# cuts2 <- quantileCuts(italy.df$totale_casi[!is.na(italy.df$totale_casi)
+#                                            & italy.df$totale_casi > 0
+#                                            & italy.df$totale_casi > 200], 7)
+# 
+# vacant.shades1$breaks <- c(0.0000000000001, cuts1, cuts2)
+# 
+# # cuts <- scales::trans_breaks("log2", function(x) 2 ^ x, 16)(italy.df$totale_casi)
+# # 
+# # cutsvacant.shades1$breaks <- c(0.0000000000001, cuts)
+# 
+# 
+# 
+# 
+# # New cases
+# vacant.shades2 <- auto.shading(italy.df$new_cases[which(italy.df$new_cases > 0)], n = 15, cutter = quantileCuts, 
+#                                col = cols2, digits = 4)
+# 
+# vacant.shades2$breaks <- c(0, 0.0000000000001, vacant.shades2$breaks)
 
 
+### Cutoff points
+mycut <- function(x, n = 15, t = 5, p = 0.9, start = NULL){
+  p1 <- seq(p, 0.99, length.out = t)
+  suppressWarnings(c1 <- quantileCuts(x, params = p1))
+  
+  if(is.null(start)){
+    p_st <- (1:((n - t) - 1))/(n - t)
+    start <- p_st[1]
+  }
+  
+  p2 <- seq(start, p - (p1[2] - p1[1]) * 1.5, length.out = (n - t))
+  suppressWarnings(c2 <- quantileCuts(x, params = p2))
+  
+  
+  return(c(c2, c1))
+}
 
+
+# Total cases
+vacant.shades1 <- auto.shading(italy.df$totale_casi[which(italy.df$totale_casi > 0)], 
+                               cutter = quantileCuts,  
+                               n = 15, col = cols1, digits = 4)
+cuts <- mycut(italy.df$totale_casi[which(italy.df$totale_casi > 0)], 
+              n = 14, t = 3, p = 0.92)
+vacant.shades1$breaks <- c(0.0000000000001, cuts)
 
 # New cases
-vacant.shades2 <- auto.shading(italy.df$new_cases[which(italy.df$new_cases > 0)], n = 15, cutter = quantileCuts, 
-                               col = cols2, digits = 4)
-
-vacant.shades2$breaks <- c(0, 0.0000000000001, vacant.shades2$breaks)
+vacant.shades2 <- auto.shading(italy.df$new_cases[which(italy.df$new_cases > 0)], 
+                               cutter = quantileCuts,  
+                               n = 12, col = cols2, digits = 4)
+cuts2 <- mycut(italy.df$new_cases[which(italy.df$new_cases > 0)], 
+               n = 13, t = 3, p = 0.92)
+vacant.shades2$breaks <- c(0, 0.0000000000001, cuts2)
 
 
 
@@ -207,8 +242,10 @@ for(i in dates){
   ### Outer label
   mtext(paste0("COVID-19: ", j), outer = TRUE, cex = 1.5)
   
-  mtext("Data source: https://github.com/pcm-dpc/COVID-19", outer = TRUE, 
-        cex = 1, side = 1, adj = 1)
+  mtext("Data source: Dipartimento della Protezione Civile, https://github.com/pcm-dpc/COVID-19", outer = TRUE, 
+        cex = 0.8, side = 1, adj = 1, line = -0.8)
+  mtext("Code and processed data: https://github.com/ruettenauer/COVID-19-maps/", outer = TRUE, 
+        cex = 0.8, side = 1, adj = 1, line = 0)
   
   dev.off()
   
@@ -222,18 +259,22 @@ for(i in dates){
 ######################
 
 
-files <- list.files(path = "../03_Output/", pattern = "Italy_cases_*", full.names = T)
+# All pictures
+files <- paste0("../03_Output/", "Italy_cases_", dates[dates >= "2020-03-01"], ".png")
 
+# Repeat last picture
+files <- c(files, files[length(files)], files[length(files)], files[length(files)], files[length(files)]) 
+
+# Import files
 img <- lapply(files, FUN = function(x) image_read(x))
 
-# img2 <- lapply(img, FUN = function(x) image_resize(x, "840x490"))
-
+# Resize
 img2 <- lapply(img, FUN = function(x) image_resize(x, "1260x735"))
 
-
+# Animate
 img2 <- image_join(img2)
 
-gif <- image_animate(img2, fps = 1)
+gif <- image_animate(img2, fps = 2)
 
 image_write(gif, "../03_Output/Italy_covid19.gif")
 

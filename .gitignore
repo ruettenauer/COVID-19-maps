@@ -1,4 +1,5 @@
 *.Rproj.user
 *.Rhistory
 *WHO_covid.RData
+*09_Reg-inkar.R
 

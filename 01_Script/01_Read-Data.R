@@ -147,7 +147,7 @@ names(germany_long.df)[which(names(germany_long.df) == "IdLandkreis")] <- "AGS"
 
 
 ### extract date
-germany_long.df$date <- substr(germany_long.df$Meldedatum, 1, 10)
+germany_long.df$date <- substr(germany_long.df$Refdatum, 1, 10) # switch from reporting date to ref date
 germany_long.df$date <- as.Date(germany_long.df$date, format = "%Y-%m-%d")
 
 ### extract age
@@ -166,11 +166,11 @@ germany_long.df$Geschlecht[germany_long.df$Geschlecht == "unbekannt"] <- NA
 germany_long.df <- germany_long.df[order(germany_long.df$AGS, germany_long.df$date), ]
 
 germany_long.df$daily_cases <- ave(germany_long.df$AnzahlFall,
-                                   by = paste0(germany_long.df$AGS, germany_long.df$date),
-                                   FUN = function(x) sum (x, na.rm = TRUE))
+                                   by = paste0(germany_long.df$AGS, germany_long.df$Refdatum),
+                                   FUN = function(x) sum(x, na.rm = TRUE))
 germany_long.df$daily_deaths <- ave(germany_long.df$AnzahlTodesfall,
                                    by = paste0(germany_long.df$AGS, germany_long.df$date),
-                                   FUN = function(x) sum (x, na.rm = TRUE))
+                                   FUN = function(x) sum(x, na.rm = TRUE))
 
 
 ### reshape age group cases to wide
@@ -218,9 +218,11 @@ germany_long.df <- merge(germany_long.df, sex_w.df, by = c("AGS", "date"),
 
 
 ### Drop report specific info and make unique
-germany_long.df[, which(names(germany_long.df) %in% c("Geschlecht", "Altersgruppe", "age_gr", 
-                                                      "ObjectId", "AnzahlFall", "AnzahlTodesfall",
-                                                      "NeuerFall", "NeuerTodesfall"))] <- NULL
+vars <- c("AGS", "Landkreis", "IdBundesland", "Bundesland",
+          "date", "daily_cases", "daily_deaths",
+          names(germany_long.df)[grep("_age_", names(germany_long.df))],
+          names(germany_long.df)[grep("_sex_", names(germany_long.df))])
+germany_long.df <- germany_long.df[, vars]
 
 germany_long.df <- unique(germany_long.df)
 
@@ -256,6 +258,8 @@ for(i in names(table(age.df$age_gr))){
 ############
 ### Save ###
 ############
+
+
 
 ### Save
 save(italy.df, file = "Italy_covid.RData")
